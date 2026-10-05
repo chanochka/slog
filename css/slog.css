@@ -1,0 +1,170 @@
+/* Слог в стиле её английского учебника: розовая страница, белые карточки с тёмной обводкой и цветной тенью,
+   ярлыки на верхнем краю, кот выглядывает из-за карточки (один на страницу). Заголовки — M PLUS Rounded 1c
+   (у Fredoka из учебника нет кириллицы), текст — Nunito. */
+:root {
+  --bg: #FBE6EC; --card: #fff; --navy: #26323D; --pink: #E8A8BA; --blue: #C4D2E2; --lav: #DCCFE7; --yellow: #FFF0C7;
+  --hl: #FFE7A6; --starry: #486C8A; --slate: #677F94; --dots: #8298AE; --sky: #E6EEF6; --field: #FFF8E5;
+  --line: 1.5px solid var(--navy);
+  --disp: "M PLUS Rounded 1c", "Nunito", sans-serif;
+}
+/* тёмная тема только по ?theme=dark: учебник всегда розовый */
+:root[data-theme="dark"] {
+  --bg: #1F1B24; --card: #2A2631; --navy: #F3E9EE; --pink: #9C5E70; --blue: #4C6176; --lav: #5E5070; --yellow: #5C5032;
+  --hl: #6B5A24; --starry: #A9C3DA; --slate: #A7B4C1; --dots: #6E7C8A; --sky: #34404C; --field: #332D26;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; }
+html { overflow-x: hidden; overscroll-behavior-x: none; -webkit-text-size-adjust: 100%; }
+body { background: var(--bg); color: var(--navy); font: 700 17px/1.45 "Nunito", sans-serif; }
+img { display: block; max-width: 100%; }
+p { margin: 0; }
+a { color: var(--starry); }
+button, input, textarea, select { font: inherit; color: inherit; }
+strong { font-weight: 900; }
+
+/* верхняя полоса */
+.topbar { position: sticky; top: 0; z-index: 10; background: #26323D; color: #fff; padding-top: env(safe-area-inset-top); }
+.topbar-in { max-width: 640px; margin: 0 auto; padding: 10px 16px; display: flex; align-items: center; gap: 14px; }
+.topbar .brand { font: 800 18px/1 var(--disp); letter-spacing: .08em; color: #fff; text-decoration: none; margin-right: auto; }
+.topbar nav { display: flex; gap: 14px; }
+.topbar nav a { color: #fff; text-decoration: none; font: 800 15px/1 var(--disp); opacity: .8; }
+.topbar nav a.on { opacity: 1; text-decoration: underline; text-underline-offset: 5px; text-decoration-thickness: 2px; }
+
+main { max-width: 640px; margin: 0 auto; padding: 22px 16px calc(40px + env(safe-area-inset-bottom)); }
+
+/* шапка страницы: круглый значок, надзаголовок, заголовок, подзаголовок */
+.head { position: relative; display: grid; grid-template-columns: auto 1fr; gap: 16px; align-items: center; margin-bottom: 8px; }
+.badge { width: 88px; height: 88px; border-radius: 50%; border: 2px solid var(--navy); box-shadow: 4px 4px 0 var(--navy);
+  background: var(--pink); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: #26323D; }
+.badge .d { font: 800 11px/1 var(--disp); letter-spacing: .06em; text-transform: uppercase; }
+.badge .n { font: 800 38px/1 var(--disp); margin-top: 2px; }
+.head .star { position: absolute; width: 26px; left: 70px; top: -8px; transform: rotate(-12deg); }
+.kicker { font: 900 12px/1.3 "Nunito"; letter-spacing: .14em; text-transform: uppercase; color: var(--starry); }
+.title { font: 800 32px/1.05 var(--disp); margin: 4px 0 4px; }
+.sub { font: 800 16px/1.25 "Nunito"; color: var(--starry); }
+
+/* карточки с ярлыком и тенью */
+.stack { display: flex; flex-direction: column; gap: 28px; margin-top: 30px; }
+.card { position: relative; background: var(--card); border: var(--line); border-radius: 18px; padding: 26px 18px 18px;
+  box-shadow: 5px 5px 0 var(--sh, var(--pink)); }
+.tag { position: absolute; top: -15px; left: 16px; z-index: 2; background: var(--tc, var(--pink)); color: #26323D; border: var(--line);
+  border-radius: 99px; padding: 4px 14px 3px; font: 800 15px/1.2 var(--disp); white-space: nowrap; max-width: calc(100% - 32px);
+  overflow: hidden; text-overflow: ellipsis; }
+.tag.navy { background: #26323D; color: #fff; }
+.catwrap { position: relative; margin-top: 56px; }
+.catwrap .cat { position: absolute; right: 22px; top: -62px; width: 92px; z-index: 0;
+  filter: drop-shadow(1.2px 0 0 #26323D) drop-shadow(-1.2px 0 0 #26323D) drop-shadow(0 -1.2px 0 #26323D); }
+.catwrap > .card { position: relative; z-index: 1; }
+.stack > .catwrap:first-child { margin-top: 36px; }
+.label { font: 900 12px/1.35 "Nunito"; letter-spacing: .1em; text-transform: uppercase; color: var(--starry); }
+.note { font: 700 14px/1.4 "Nunito"; color: var(--slate); }
+
+/* кнопки */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 1.5px solid #26323D; border-radius: 99px;
+  background: #26323D; color: #fff; padding: 10px 22px 9px; font: 800 17px/1.2 var(--disp); cursor: pointer;
+  box-shadow: 3px 3px 0 var(--pink); text-decoration: none; }
+.btn.light { background: var(--card); color: var(--navy); border-color: var(--navy); box-shadow: 3px 3px 0 var(--blue); }
+.btn.no { background: var(--card); color: var(--navy); border-color: var(--navy); box-shadow: 3px 3px 0 var(--pink); }
+.btn.wide { display: flex; width: 100%; }
+.btn.small { padding: 6px 16px 5px; font-size: 15px; }
+.btn.rec { background: var(--pink); color: #26323D; }
+.btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 18px; }
+.btns .btn { flex: 1; min-width: 130px; }
+.linkbtn { display: block; margin: 12px auto 0; border: 0; background: none; font: 800 15px "Nunito"; color: var(--starry);
+  text-decoration: underline; cursor: pointer; }
+.play { width: 34px; height: 34px; border-radius: 50%; border: 1.5px solid #26323D; background: var(--yellow); color: #26323D; cursor: pointer;
+  font: 800 12px/1 var(--disp); display: inline-grid; place-content: center; flex: none; padding: 0 0 0 2px; vertical-align: middle; }
+
+/* сегодня */
+.trow { display: grid; grid-template-columns: 30px 1fr auto; gap: 12px; align-items: center; padding: 12px 0; text-decoration: none; color: var(--navy); }
+.trow + .trow { border-top: 2px dotted var(--dots); }
+.num { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%;
+  background: #26323D; color: #fff; font: 800 15px/1 var(--disp); flex: none; }
+.trow.done .num { background: var(--hl); color: #26323D; border: 1.5px solid #26323D; }
+.trow .tt b { display: block; font: 800 19px/1.2 var(--disp); }
+.trow .tt small { display: block; font: 800 14px/1.3 "Nunito"; color: var(--starry); margin-top: 2px; }
+.trow.done .tt b { color: var(--slate); }
+.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+.mini { border: var(--line); border-radius: 14px; padding: 10px 10px 8px; background: var(--card); }
+.mini .label { font-size: 11px; }
+.mini b { display: block; font: 800 28px/1.1 var(--disp); margin-top: 4px; }
+.mini small { display: block; font: 800 12px/1.3 "Nunito"; color: var(--starry); }
+.mini.speech { background: var(--hl); }
+.week { display: flex; justify-content: space-between; margin-top: 14px; }
+.week i { font: 800 12px/1 "Nunito"; font-style: normal; width: 36px; height: 36px; border-radius: 50%; border: var(--line);
+  display: flex; align-items: center; justify-content: center; background: var(--card); color: var(--starry); }
+.week i.on { background: #26323D; color: #fff; border-color: #26323D; }
+.week i.now { box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px var(--pink); }
+.lrow { display: flex; align-items: center; gap: 10px; padding: 11px 0; text-decoration: none; color: var(--navy); }
+.lrow + .lrow { border-top: 2px dotted var(--dots); }
+.lrow span { flex: 1; min-width: 0; }
+.lrow b { display: block; font: 800 17px/1.25 var(--disp); }
+.lrow small { display: block; font: 700 14px/1.3 "Nunito"; color: var(--slate); }
+.lrow .arr { flex: none; color: var(--starry); font: 800 18px var(--disp); }
+
+/* карточка-упражнение */
+.prog { height: 12px; border: var(--line); border-radius: 99px; overflow: hidden; background: var(--card); margin: 18px 0 4px; }
+.prog i { display: block; height: 100%; background: var(--yellow); transition: width .3s; }
+.face { text-align: center; }
+.face .src { font: 900 12px/1.3 "Nunito"; letter-spacing: .12em; text-transform: uppercase; color: var(--starry); }
+.face .mean { font: 800 22px/1.3 "Nunito"; margin: 10px 0 6px; }
+.face .hint { font: 700 15px/1.4 "Nunito"; color: var(--starry); font-style: italic; }
+.face .quote { font: 800 20px/1.4 "Nunito"; margin: 10px 0 6px; }
+.gap { display: inline-block; min-width: 4.5em; border-bottom: 3px solid var(--pink); color: transparent; line-height: 1; }
+.back { border-top: 2px dotted var(--dots); margin-top: 16px; padding-top: 14px; text-align: center; display: flex; flex-direction: column; gap: 12px; align-items: center; }
+.word { font: 800 32px/1.15 var(--disp); display: inline-flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.chips span { background: var(--sky); border-radius: 99px; padding: 3px 12px; font: 800 15px/1.3 "Nunito"; }
+.ex { font: italic 700 17px/1.45 "Nunito"; }
+.ex .play { margin-left: 6px; }
+.nb { font: 700 15px/1.4 "Nunito"; background: var(--yellow); border-radius: 14px; padding: 9px 14px; text-align: left; width: 100%; }
+.tip { display: inline-block; background: var(--hl); border-radius: 99px; padding: 3px 14px; font: 800 15px/1.3 "Nunito"; margin-top: 10px; }
+.plainq { font: italic 800 21px/1.4 "Nunito"; margin: 10px 0 8px; }
+.bookq { font: 800 21px/1.4 "Nunito"; }
+mark { background: var(--hl); color: inherit; border-radius: 99px; padding: 0 6px; font-weight: 900; }
+mark.extra { background: var(--blue); }
+
+/* мысль дня */
+.question { font: 800 26px/1.25 var(--disp); margin: 6px 0 14px; }
+.targets { justify-content: flex-start; }
+.targets span { background: var(--card); border: var(--line); font-size: 16px; }
+.targets span.on { background: #26323D; color: #fff; border-color: #26323D; }
+.targets span.on::before { content: '✓ '; }
+.tools { display: flex; gap: 12px; margin: 22px 0 14px; }
+.tools .btn { flex: 1; }
+textarea, input, select { width: 100%; border: var(--line); border-radius: 14px; background: var(--field); padding: 10px 14px;
+  font: 800 17px/1.45 "Nunito"; color: var(--navy); }
+textarea:focus, input:focus, select:focus { outline: 3px solid var(--blue); }
+#speech { min-height: 170px; border-radius: 18px; background: var(--card); box-shadow: 5px 5px 0 var(--lav); }
+.spoken { font: 700 18px/1.6 "Nunito"; }
+.score { font: 800 26px/1.15 var(--disp); margin: 4px 0 12px; }
+
+/* из книги, банк */
+.form { display: flex; flex-direction: column; gap: 14px; }
+.form label { display: flex; flex-direction: column; gap: 6px; font: 900 15px "Nunito"; }
+.form label small { color: var(--slate); font-weight: 700; }
+.wrow { display: flex; align-items: center; gap: 10px; padding: 10px 0; text-decoration: none; color: var(--navy); }
+.wrow + .wrow { border-top: 2px dotted var(--dots); }
+.wrow > span, .wrow > a { flex: 1; min-width: 0; text-decoration: none; color: var(--navy); }
+.wrow b { display: block; font: 800 18px/1.25 var(--disp); }
+.wrow small { display: block; font: 700 14px/1.3 "Nunito"; color: var(--slate); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dot { flex: none; display: inline-block; width: 14px; height: 14px; border-radius: 50%; border: var(--line); background: var(--card); vertical-align: -2px; }
+.dot.learn { background: var(--hl); } .dot.speech { background: var(--navy); }
+.del { border: 0; background: none; font-size: 17px; cursor: pointer; color: var(--starry); padding: 4px; }
+.pills { display: flex; flex-wrap: wrap; gap: 6px; margin: 14px 0 4px; }
+.pill { border: var(--line); border-radius: 99px; background: var(--card); padding: 4px 12px; cursor: pointer; font: 800 14px/1.2 "Nunito"; }
+.pill.on { background: #26323D; color: #fff; border-color: #26323D; }
+.pair { text-align: left; width: 100%; font: 700 15px/1.4 "Nunito"; }
+.pair span { display: block; }
+.pair span:first-child { color: var(--slate); font-style: italic; }
+.back-link { display: inline-block; font: 800 15px "Nunito"; margin-bottom: 4px; }
+
+#toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); transform: translate(-50%, 20px); opacity: 0;
+  background: #26323D; color: #fff; padding: 10px 18px; border-radius: 99px; font: 800 15px "Nunito"; transition: .25s;
+  pointer-events: none; max-width: calc(100% - 32px); z-index: 20; box-shadow: 3px 3px 0 var(--pink); }
+#toast.on { opacity: 1; transform: translate(-50%, 0); }
+
+@media (max-width: 380px) {
+  .badge { width: 76px; height: 76px; } .badge .n { font-size: 32px; } .head .star { left: 60px; }
+  .title { font-size: 28px; } .catwrap .cat { width: 80px; top: -54px; }
+}
