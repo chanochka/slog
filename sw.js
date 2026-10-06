@@ -1,5 +1,5 @@
 // Работа без сети: сначала из кэша. Меняешь файлы сайта — подними CACHE.
-const CACHE = 'slog-v1';
+const CACHE = 'slog-v5';
 const FILES = ['./', 'index.html', 'css/slog.css', 'js/data.js', 'js/store.js', 'js/app.js', 'manifest.webmanifest',
   'icons/icon-180.png', 'icons/icon-192.png', 'icons/icon-512.png',
   'sprites/cat-peek.png', 'sprites/star-yellow.png', 'fonts/fonts.css',

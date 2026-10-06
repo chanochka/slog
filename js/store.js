@@ -9,7 +9,9 @@ const BOXES = [0, 1, 3, 7, 14, 30, 60];
 function loadState() {
   let s = {};
   try { s = JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) {}
-  return Object.assign({ cards: {}, mine: [], days: {}, used: {}, think: {}, settings: { newPerDay: 10, voice: '' } }, s);
+  const st = Object.assign({ cards: {}, mine: [], days: {}, used: {}, think: {}, settings: { newPerDay: 30, voice: '' } }, s);
+  if (st.settings.newPerDay === 10) st.settings.newPerDay = 30; // старое значение по умолчанию (6 окт: «в день намного больше слов»)
+  return st;
 }
 let S = loadState();
 function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
@@ -35,29 +37,29 @@ function status(id) {
   return 'new';
 }
 
-// Очередь дня: сначала те, чей срок пришёл, потом новые (свои слова первыми, каждая третья — связка).
+// Очередь дня: сначала те, чей срок пришёл, потом новые (свои слова первыми). Связки в карточки не идут
+// (её слова 6 окт: «не слово, а конструкция; нужны только сложные слова»).
 function freshOrder() {
   const mine = S.mine.filter(x => !S.cards[x.id]);
   const words = BANK.filter(x => x.k === 'w' && !S.cards[x.id]);
-  const links = BANK.filter(x => x.k === 'l' && !S.cards[x.id]);
-  const out = mine.slice();
-  let i = 0;
-  while (words.length || links.length) {
-    i++;
-    if (i % 3 === 0 && links.length) out.push(links.shift());
-    else if (words.length) out.push(words.shift());
-    else out.push(links.shift());
-  }
-  return out;
+  return mine.concat(words);
 }
 function dueIds() {
   const t = today();
-  return Object.keys(S.cards).filter(id => S.cards[id].due <= t && item(id))
+  return Object.keys(S.cards).filter(id => S.cards[id].due <= t && item(id) && item(id).k !== 'l')
     .sort((a, b) => S.cards[a].box - S.cards[b].box);
 }
 function freshLeft() { const r = dayRec(); return Math.max(0, S.settings.newPerDay + (r.extra || 0) - r.fresh); }
 function queue() {
   return dueIds().concat(freshOrder().slice(0, freshLeft()).map(x => x.id));
+}
+
+// Знакомство: новое слово показано открытым, она прочитала вслух — завтра придёт по смыслу.
+function intro(id) {
+  const t = today(), r = dayRec();
+  if (!S.cards[id]) { S.cards[id] = { box: 0, due: addDays(t, 1), seen: t, miss: 0 }; r.fresh++; }
+  r.cards++;
+  save();
 }
 
 function answer(id, got) {
@@ -86,7 +88,7 @@ function sayPool(n = 5) {
 
 function hash(s) { let h = 0; for (const ch of s) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return h; }
 
-// «Мысль дня»: вопрос и 3 слова + 1 связка на сегодня, одни и те же весь день.
+// «Мысль дня»: вопрос и 4 слова на сегодня, одни и те же весь день (связок нет — её решение 6 окт).
 function thinkPlan() {
   const t = today();
   if (S.think[t]) return S.think[t];
@@ -94,10 +96,8 @@ function thinkPlan() {
   const q = QUESTIONS[seed % QUESTIONS.length];
   const seen = Object.keys(S.cards).map(item).filter(Boolean);
   const pool = (seen.length >= 3 ? seen : seen.concat(queue().map(item))).filter(Boolean);
-  const words = pool.filter(x => x.k !== 'l').sort((a, b) => (S.used[a.id] || 0) - (S.used[b.id] || 0)).slice(0, 3);
-  const links = BANK.filter(x => x.k === 'l');
-  const link = pool.find(x => x.k === 'l') || links[seed % links.length];
-  return { q, targets: words.map(x => x.id).concat(link ? [link.id] : []), text: '', done: false };
+  const words = pool.filter(x => x.k !== 'l').sort((a, b) => (S.used[a.id] || 0) - (S.used[b.id] || 0)).slice(0, 4);
+  return { q, targets: words.map(x => x.id), text: '', done: false };
 }
 
 // Нашлось ли слово в тексте: по его основам (p), без учёта регистра и «ё».

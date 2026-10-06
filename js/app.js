@@ -88,6 +88,13 @@ function blank(x) {
   const r = rs[0];
   return esc(x.q.slice(0, r.s)) + '<span class="gap">' + '_'.repeat(Math.min(10, r.e - r.s)) + '</span>' + esc(x.q.slice(r.e));
 }
+// Текст с пропусками на месте всех вхождений слова (сочетания, пример связки).
+function gaps(text, x) {
+  const rs = spans(text, x, '').sort((a, b) => a.s - b.s);
+  let html = '', i = 0;
+  for (const r of rs) { if (r.s < i) continue; html += esc(text.slice(i, r.s)) + '<span class="gap">' + '_'.repeat(Math.min(10, r.e - r.s)) + '</span>'; i = r.e; }
+  return html + esc(text.slice(i));
+}
 
 // ---------- сегодня ----------
 function home() {
@@ -128,7 +135,7 @@ function home() {
 let CQ = null;
 function cards(fresh) {
   setTab('cards');
-  if (fresh || !CQ || CQ.day !== today()) { const q = queue(); CQ = { day: today(), q, total: q.length, passed: 0, open: P.has('reveal') }; }
+  if (fresh || !CQ || CQ.day !== today()) { const q = queue(); CQ = { day: today(), q, total: q.length, passed: 0, open: P.has('reveal'), hint: false }; }
   const top = head('осталось', CQ.q.length, 'Каждый день · 7 минут', 'Карточки', 'сначала смысл — слово говоришь сама') + prog(CQ.passed, CQ.total);
   if (!CQ.q.length) {
     const r = dayRec();
@@ -140,26 +147,70 @@ function cards(fresh) {
   }
   const x = item(CQ.q[0]);
   const [kind, tc] = KIND[x.k];
-  let face, back;
+  const w = plain(x.w);
+  const letters = `на «${esc(w[0])}», ${w.length} ${plural(w.length, 'буква', 'буквы', 'букв')}`;
+  // Знакомство: слово ещё не было в карточках — показываем открытым, она читает вслух.
+  if (!S.cards[x.id]) {
+    const body = x.k === 'm'
+      ? `<div class="src">${x.b ? '«' + esc(x.b) + '»' : 'фраза из книги'}</div>
+        <div class="word">${esc(x.w)}${play(x.w)}</div>
+        ${x.m ? `<div class="mean">${esc(x.m)}</div>` : ''}
+        <p class="ex">${highlight(x.q || '', [[[x.id], 'own']])}</p>`
+      : `<div class="src">${themeName(x.t)}</div>
+        <div class="word">${esc(accent(x.w))}${play(x.w)}</div>
+        <div class="mean">${esc(x.m)}</div>
+        ${x.c ? `<div class="chips">${x.c.map(c => `<span>${esc(c)}</span>`).join('')}</div>` : ''}
+        <p class="ex">${highlight(x.e, [[[x.id], 'own']])}${play(x.e)}</p>
+        ${x.n ? `<p class="nb"><strong>Не путать.</strong> ${esc(x.n)}</p>` : ''}`;
+    return view(top + `<div class="stack">${card(x.k === 'l' ? 'Новая связка' : x.k === 'm' ? 'Из книги · новое' : 'Новое слово', `<div class="face">${body}
+      <div class="hint">прочитай вслух — завтра спрошу по смыслу</div>
+      <div class="btns"><button class="btn" data-a="read">Прочитала вслух</button></div>
+      <a class="linkbtn" href="#/">Закончить — ответы уже сохранены</a></div>`, { cat: true, tc: 'yellow', sh: 'blue' })}</div>`);
+  }
+  // Повтор: смысл и подсказка-сочетания; первая буква — только по кнопке.
+  let face, back, more;
   if (x.k === 'm') {
-    const w = plain(x.w);
     face = `<div class="src">${x.b ? '«' + esc(x.b) + '»' : 'фраза из книги'}</div>
       <div class="quote">${blank(x)}</div>
-      <div class="hint">${x.m ? esc(x.m) + ' · ' : ''}на «${esc(w[0])}», ${w.length} ${plural(w.length, 'буква', 'буквы', 'букв')} · скажи вслух</div>`;
+      <div class="hint">${x.m ? esc(x.m) + ' · ' : ''}скажи вслух</div>`;
     back = `<div class="word">${esc(x.w)}${play(x.w)}</div><p class="ex">${highlight(x.q || '', [[[x.id], 'own']])}</p>`;
-  } else {
+    more = letters;
+  } else if (x.k === 'l') {
     face = `<div class="src">${themeName(x.t)}</div>
       <div class="mean">${esc(x.m)}</div>
-      <div class="hint">${esc(x.h || '')} · скажи вслух</div>`;
+      ${x.e ? `<div class="quote">${gaps(x.e, x)}</div>` : ''}
+      <div class="hint">скажи вслух</div>`;
+    back = `<div class="word">${esc(accent(x.w))}${play(x.w)}</div>
+      <p class="ex">${highlight(x.e, [[[x.id], 'own']])}${play(x.e)}</p>`;
+    more = x.h || letters;
+  } else if (x.t === 'udar') {
+    // Ударение: слово показано без ударения, она произносит; на обороте — верное ударение и неверный вариант.
+    face = `<div class="src">${themeName(x.t)}</div>
+      <div class="word">${esc(plain(x.w))}</div>
+      <div class="mean">${esc(x.m.split(/[.;]/)[0])}.</div>
+      <div class="hint">где ударение? скажи вслух</div>`;
+    back = `<div class="word">${esc(accent(x.w))}${play(x.w)}</div>
+      ${x.c ? `<div class="chips">${x.c.map(c => `<span>${esc(c)}</span>`).join('')}</div>` : ''}
+      <p class="ex">${highlight(x.e, [[[x.id], 'own']])}${play(x.e)}</p>
+      ${x.n ? `<p class="nb">${esc(x.n)}</p>` : ''}`;
+    more = x.m;
+  } else {
+    const chips = (x.c || []).map(c => gaps(c, x)).filter(c => c.includes('class="gap"'));
+    face = `<div class="src">${themeName(x.t)}</div>
+      <div class="mean">${esc(x.m)}</div>
+      ${chips.length ? `<div class="chips">${chips.map(c => `<span>${c}</span>`).join('')}</div>` : ''}
+      <div class="hint">${esc((x.h || '').split(',')[0])} · скажи вслух</div>`;
     back = `<div class="word">${esc(accent(x.w))}${play(x.w)}</div>
       ${x.c ? `<div class="chips">${x.c.map(c => `<span>${esc(c)}</span>`).join('')}</div>` : ''}
       <p class="ex">${highlight(x.e, [[[x.id], 'own']])}${play(x.e)}</p>
       ${x.n ? `<p class="nb"><strong>Не путать.</strong> ${esc(x.n)}</p>` : ''}`;
+    more = letters;
   }
   view(top + `<div class="stack">${card(kind, `<div class="face">${face}
     ${CQ.open ? `<div class="back">${back}</div>
       <div class="btns"><button class="btn no" data-a="miss">Не пришло</button><button class="btn" data-a="got">Вспомнила</button></div>`
-      : '<div class="btns"><button class="btn" data-a="open">Показать</button></div>'}
+      : `${CQ.hint ? `<div class="tip">${more}</div>` : '<button class="linkbtn" data-a="chint">Ещё подсказка</button>'}
+      <div class="btns"><button class="btn" data-a="open">Показать</button></div>`}
     <a class="linkbtn" href="#/">Закончить — ответы уже сохранены</a></div>`, { cat: true, tc, sh: 'blue' })}</div>`);
 }
 
@@ -303,7 +354,7 @@ function more() {
   const vs = ruVoices(), cur = bestVoice();
   view(head('новых', S.settings.newPerDay, 'Настройки', 'Ещё', 'голос, сколько новых, как это устроено') +
   `<div class="stack">
-    ${card('Новых карточек в день', `<div class="pills" style="margin:0">${[5, 10, 15, 20].map(n => `<button class="pill ${S.settings.newPerDay === n ? 'on' : ''}" data-a="newn" data-id="${n}">${n}</button>`).join('')}</div>`,
+    ${card('Новых карточек в день', `<div class="pills" style="margin:0">${[10, 20, 30, 50].map(n => `<button class="pill ${S.settings.newPerDay === n ? 'on' : ''}" data-a="newn" data-id="${n}">${n}</button>`).join('')}</div>`,
       { cat: true, tc: 'yellow', sh: 'blue' })}
     ${card('Голос', vs.length ? `<select id="voice">${vs.map(v => `<option value="${esc(v.voiceURI)}" ${cur && v.voiceURI === cur.voiceURI ? 'selected' : ''}>${esc(v.name)}</option>`).join('')}</select>
       <div class="btns"><button class="btn light" data-speak="Он не спорил по существу — он апеллировал к жалости.">▶ Послушать</button></div>`
@@ -331,8 +382,10 @@ document.addEventListener('click', e => {
     const cur = CQ.q.shift();
     answer(cur, a === 'got');
     if (a === 'got') CQ.passed++; else CQ.q.push(cur);
-    CQ.open = false; cards();
+    CQ.open = false; CQ.hint = false; cards();
   }
+  else if (a === 'read') { intro(CQ.q.shift()); CQ.passed++; CQ.open = false; CQ.hint = false; cards(); }
+  else if (a === 'chint') { CQ.hint = true; cards(); }
   else if (a === 'more5') { dayRec().extra = (dayRec().extra || 0) + 5; save(); cards(true); }
   else if (a === 'hint') { SQ.hint = true; say(); }
   else if (a === 'sayopen') { SQ.open = true; say(); }
@@ -416,7 +469,7 @@ if ('serviceWorker' in navigator && DEMO === null && (location.protocol === 'htt
 // Образец прогресса для картинок экранов: ?demo (и ?demo=done — «Мысль дня» уже сказана). Хранится отдельно, `slog-demo`.
 function seedDemo(mode) {
   const t = today();
-  S = { cards: {}, mine: [], days: {}, used: {}, think: {}, settings: { newPerDay: 10, voice: '' } };
+  S = { cards: {}, mine: [], days: {}, used: {}, think: {}, settings: { newPerDay: 30, voice: '' } };
   BANK.slice(0, 18).forEach((x, i) => { S.cards[x.id] = { box: i % 5, due: i < 6 ? t : addDays(t, 1 + i % 6), seen: addDays(t, -(i % 6) - 1), miss: 0 }; });
   ['gedonizm', 'apellirovat', 'otnyud', 'ne-stolko'].forEach(id => S.used[id] = 1);
   for (let i = 1; i <= 5; i++) S.days[addDays(t, -i)] = { cards: 14, fresh: 5, say: 5, think: i % 2 === 1 };
